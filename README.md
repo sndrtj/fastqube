@@ -77,6 +77,8 @@ With the lossy modes the size is further trimmed to:
 
 # Usage
 
+Single end modes optionally read from stdin. 
+
 ## Lossless compression 
 ```bash
 fastqube -c input.fastq > output.fqb
@@ -96,6 +98,29 @@ fastqube -d input.fqb > output.fastq
 ```bash
 fastqube -d -1 R1.fqb -2 R2.fqb -o1 R1.fastq -o2 R2.fastq
 ```
+
+## Lossy compression
+Lossly compression is enabled with the `-l` flag. This has three possible
+values:
+
+1. `NoID`
+2. `BlockQual`
+3. `BLockQualNoID`
+
+```bash
+fastqube -l <MODE> -c input.fastq > output.fqb
+```
+
+### Paired-end mode
+```bash
+fastqube -c -1 R1.fastq -2 R2.fastq -o1 R1.fqb -o2 R2.fqb
+```
+
+## Lossy decompression
+
+Lossy decompression uses the same command-line as lossless decompression:
+the fastqube header contains the information about which lossy mode was used.
+
 
 # License
 
