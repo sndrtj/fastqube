@@ -105,7 +105,7 @@ values:
 
 1. `NoID`
 2. `BlockQual`
-3. `BLockQualNoID`
+3. `BlockQualNoID`
 
 ```bash
 fastqube -l <MODE> -c input.fastq > output.fqb
