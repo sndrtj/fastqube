@@ -9,11 +9,11 @@ Fastqube is little tool that makes a binary representation of fastq file(s).
 Fastq files are typically very inefficient text files, and are as such 
 usually directly compressed with gzip. 
 
-Many tools exist that take transform fastq into a better compressible format, 
+Many tools exist that transform fastq into a better compressible format, 
 but those typically rely on aligning to a reference genome first (e.g CRAM).
 
 Instead, fastqube is a simple direct binary representation of a given fastq 
-files. As such, each read consists of three fields:
+file. As such, each read consists of three fields:
 
 1. A read ID in ASCII. 
 2. The sequence encoded in 3-bit encoding (ACTGN, other IUPAC codes 
