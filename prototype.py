@@ -7,7 +7,64 @@ fastqube prototype
 """
 import argparse
 import pathlib
+from typing import NamedTuple, List
 import bitstruct
+
+
+class ParsedFastqRead(NamedTuple):
+    read_id: str
+    seq: List[int]
+    qualities: List[int]
+
+    def serialize(self) -> 'RawFastqRead':
+        pass
+
+    def compress(self) -> bytearray:
+        pass
+
+    @classmethod
+    def from_bytearray(cls, bytearray) -> 'ParsedFastqRead':
+        pass
+
+
+class RawFastqRead(NamedTuple):
+    read_id: str
+    seq: List[str]
+    qualities: List[str]
+
+    def deserialize(self) -> ParsedFastqRead:
+        pass
+
+
+class RawRastqReader(object):
+
+    def __init__(self, path: pathlib.Path):
+        self.path = path
+        self.handle = self.path.open("r")
+        self.bucket = []
+
+    def __next__(self) -> RawFastqRead:
+        i = 0
+        while i < 3:
+            line = next(self.handle)
+            if line == r"+\n":
+                continue
+            self.bucket.append(line)
+            i += 1
+        read = RawFastqRead(
+            read_id=self.bucket[0].strip(),
+            seq=self.bucket[1].strip().split(""),
+            qualities=self.bucket[2].strip().split("")
+        )
+        self.__bucket = []
+        return read
+
+    def __iter__(self):
+        return self
+
+    def close(self):
+        self.handle.close()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
