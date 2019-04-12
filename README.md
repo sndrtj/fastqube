@@ -1,8 +1,8 @@
 fastqube
 ========
 
-NOTE: THIS IS A DESIGN DOCUMENT. THIS REPOSITORY DOES NOT YET CONTAIN
-ANY FUNCTIONAL CODE. 
+NOTE: THIS IS A DESIGN DOCUMENT. THIS REPOSITORY ONLY CONTAINS A LITTLE 
+PROTOTYPE IN PYTHON.  
 
 Fastqube is little tool that makes a binary representation of fastq file(s).
 
@@ -120,6 +120,16 @@ fastqube -c -1 R1.fastq -2 R2.fastq -o1 R1.fqb -o2 R2.fqb
 
 Lossy decompression uses the same command-line as lossless decompression:
 the fastqube header contains the information about which lossy mode was used.
+
+
+# Prototype
+
+There is a little [prototype](prototype.py) implemented in python. It so far 
+only supports compression in lossless mode. You can use this prototype
+to get an impression of how fastqube-generated files will ultimately look like. 
+
+As this is a prototype, it is really slow, and even the file format is liable
+to change.    
 
 
 # License
