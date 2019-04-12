@@ -47,16 +47,16 @@ class RawRastqReader(object):
         i = 0
         while i < 3:
             line = next(self.handle)
-            if line == r"+\n":
+            if line == "+\n":
                 continue
             self.bucket.append(line)
             i += 1
         read = RawFastqRead(
             read_id=self.bucket[0].strip(),
-            seq=self.bucket[1].strip().split(""),
-            qualities=self.bucket[2].strip().split("")
+            seq=list(self.bucket[1].strip()),
+            qualities=list(self.bucket[2].strip())
         )
-        self.__bucket = []
+        self.bucket = []
         return read
 
     def __iter__(self):
