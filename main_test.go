@@ -50,3 +50,15 @@ func TestSeqStringAsIntValid(t *testing.T) {
 		}
 	}
 }
+
+func TestSeqStringAsIntInvalid(t *testing.T) {
+	cases := []string{
+		"LALALA", "NONONONONO", "YES!",
+	}
+	for _, c := range cases {
+		_, err := seqStringToInts(c)
+		if err == nil {
+			t.Errorf("Sequence %q did not raise an error", c)
+		}
+	}
+}
