@@ -62,3 +62,24 @@ func TestSeqStringAsIntInvalid(t *testing.T) {
 		}
 	}
 }
+
+func TestFastqReadFromBucket(t *testing.T) {
+	bucket := make([]string, 3)
+	bucket[0] = "some fancy id"
+	bucket[1] = "AAAAA"
+	bucket[2] = "FFFFF"
+
+	read, err := fastqReadFromBucket(bucket)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	wantedQual := []int{37, 37, 37, 37, 37}
+	wantedSeq := []int{0, 0, 0, 0, 0}
+	if !intSliceEqual(wantedSeq, read.seq) {
+		t.Errorf("Wanted %q, got %q", wantedSeq, read.seq)
+	}
+	if !intSliceEqual(wantedQual, read.qualities) {
+		t.Errorf("Wanted %q, got %q", wantedQual, read.qualities)
+	}
+}
