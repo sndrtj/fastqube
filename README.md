@@ -1,19 +1,19 @@
 fastqube
 ========
 
-NOTE: THIS IS A DESIGN DOCUMENT. THIS REPOSITORY DOES NOT YET CONTAIN
-ANY FUNCTIONAL CODE. 
+NOTE: THIS IS A DESIGN DOCUMENT. THIS REPOSITORY ONLY CONTAINS A LITTLE 
+PROTOTYPE IN PYTHON.  
 
 Fastqube is little tool that makes a binary representation of fastq file(s).
 
 Fastq files are typically very inefficient text files, and are as such 
 usually directly compressed with gzip. 
 
-Many tools exist that take transform fastq into a better compressible format, 
+Many tools exist that transform fastq into a better compressible format, 
 but those typically rely on aligning to a reference genome first (e.g CRAM).
 
 Instead, fastqube is a simple direct binary representation of a given fastq 
-files. As such, each read consists of three fields:
+file. As such, each read consists of three fields:
 
 1. A read ID in ASCII. 
 2. The sequence encoded in 3-bit encoding (ACTGN, other IUPAC codes 
@@ -120,6 +120,16 @@ fastqube -c -1 R1.fastq -2 R2.fastq -o1 R1.fqb -o2 R2.fqb
 
 Lossy decompression uses the same command-line as lossless decompression:
 the fastqube header contains the information about which lossy mode was used.
+
+
+# Prototype
+
+There is a little [prototype](prototype.py) implemented in python. It so far 
+only supports compression in lossless mode. You can use this prototype
+to get an impression of how fastqube-generated files will ultimately look like. 
+
+As this is a prototype, it is really slow, and even the file format is liable
+to change.    
 
 
 # License
