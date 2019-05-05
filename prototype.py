@@ -50,7 +50,7 @@ class ParsedFastqRead(NamedTuple):
         return RawFastqRead(
             read_id=self.read_id,
             seq=[SEQ_MAP_REV[x] for x in self.seq],
-            qualities=[chr(i+32) for i in self.qualities]
+            qualities=[chr(i+33) for i in self.qualities]
         )
 
     def compress(self) -> bytearray:
@@ -76,7 +76,7 @@ class RawFastqRead(NamedTuple):
         return ParsedFastqRead(
             read_id=self.read_id,
             seq=[SEQ_MAP[x.upper()] for x in self.seq],
-            qualities=[ord(x)-32 for x in self.qualities]
+            qualities=[ord(x)-33 for x in self.qualities]
         )
 
 

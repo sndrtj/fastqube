@@ -20,7 +20,7 @@ type fastqRead struct {
 func decodeQualitryString(s string) []int {
 	result := make([]int, len(s))
 	for idx, item := range s {
-		quality := int(item) - 32 // qualities are offset by 32
+		quality := int(item) - 33 // qualities are offset by 33
 		result[idx] = quality
 	}
 	return result
