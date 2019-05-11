@@ -15,6 +15,50 @@ type fastqRead struct {
 	qualities []int
 }
 
+func reverseSliceB(s []bool) []bool {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+	return s
+}
+
+// returns a byte from a slice of booleans
+func boolSliceToByte(s []bool) (byte, error) {
+	if len(s) != 8 {
+		return byte(0), errors.New("Slice must have length 8")
+	}
+
+	var result uint8
+	reversed := reverseSliceB(s)
+
+	for idx, el := range reversed {
+		if el {
+			result += uint8(1) << uint8(idx)
+		}
+	}
+	return result, nil
+}
+
+// convert a uint8 to to a slice of booleans
+// capacity controls how large the slice will become
+// capacity is maximally 8.
+func uint8ToBoolSlice(b uint8, capacity int) ([]bool, error) {
+	if capacity > 8 || capacity < 1 {
+		return nil, errors.New("Capacity must be between 1 and 8")
+	}
+	result := make([]bool, 0, capacity)
+
+	for i := capacity - 1; i >= 0; i-- {
+		bit := b >> uint8(i) & 1
+		if bit == 1 {
+			result = append(result, true)
+		} else {
+			result = append(result, false)
+		}
+	}
+	return result, nil
+}
+
 // returns a slice of integers representing the decoded quality
 // string of a fastq read
 func decodeQualitryString(s string) []int {
