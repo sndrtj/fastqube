@@ -5,9 +5,13 @@ import (
 	"encoding/binary"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
+	"time"
 )
+
+const programVersion = "0.0.1"
 
 type fastqRead struct {
 	readID    string
@@ -165,11 +169,36 @@ func compressFastqBucket(bucket []string) []byte {
 	return readAsBytes
 }
 
+func utcTime() string {
+	loc, _ := time.LoadLocation("UTC")
+	return time.Now().In(loc).String()
+}
+func createHeader(capacity int) ([]byte, error) {
+	var header string
+	programLines := fmt.Sprintf("Program: fastqube\nVersion: %s\n", programVersion)
+	modeLine := "Mode: LOSSLESS\n"
+	encodingLine := "Encoding:\n\tSequence: 3 bit\n\tQualities: 6 bit\n"
+	capacityLine := "Capacities:\n\tHeader: 4096 bytes\n\tRead IDs: 64 bytes\n"
+	dateLine := fmt.Sprintf("Date: %s\n", utcTime())
+	header = programLines + modeLine + encodingLine + capacityLine + dateLine
+	byteHeader := []byte(header)
+	paddingLength := capacity - len(byteHeader)
+	if paddingLength < 0 {
+		return nil, errors.New("Header too long")
+	} else if paddingLength > 0 {
+		padding := make([]byte, paddingLength)
+		byteHeader = append(byteHeader, padding...)
+	}
+	return byteHeader, nil
+}
+
 func compressPath(path string) {
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatalln(err)
 	}
+	header, _ := createHeader(4096)
+	binary.Write(os.Stdout, binary.BigEndian, header)
 	defer file.Close()
 
 	bucket := make([]string, 0, 3) // hold bucket of strings, representing a read
