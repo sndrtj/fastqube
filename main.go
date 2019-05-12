@@ -2,9 +2,9 @@ package main
 
 import (
 	"bufio"
+	"encoding/binary"
 	"errors"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 )
@@ -177,7 +177,8 @@ func compressPath(path string) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		if len(bucket) == 3 {
-			compressFastqBucket(bucket)
+			compressed := compressFastqBucket(bucket)
+			binary.Write(os.Stdout, binary.BigEndian, compressed)
 			bucket = make([]string, 0, 3)
 		}
 		currentLine := scanner.Text()
@@ -226,7 +227,4 @@ func main() {
 	if compress {
 		compressPath(filePath)
 	}
-
-	fmt.Println(compress)
-	fmt.Println(decompress)
 }
