@@ -50,6 +50,10 @@ will be rounded down to the nearest possible value.
 This mode combines both `No ID Mode` and `Block Quality Mode`.
 
 
+# Currently implemented
+✔️ Compression in lossless mode  
+
+
 # Limitations
 
 1. IUPAC codes other than N are not supported. We may offer a feature in the
