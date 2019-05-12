@@ -26,6 +26,18 @@ func boolSliceEqual(a, b []bool) bool {
 	return true
 }
 
+func byteSliceEqual(a, b []byte) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for idx, val := range a {
+		if b[idx] != val {
+			return false
+		}
+	}
+	return true
+}
+
 func TestQualityDecoding(t *testing.T) {
 	cases := []struct {
 		s    string
@@ -136,6 +148,22 @@ func TestUint8ToBoolSlice(t *testing.T) {
 	for _, c := range cases {
 		got, _ := uint8ToBoolSlice(c.u, c.c)
 		if !boolSliceEqual(got, c.want) {
+			t.Errorf("Not equal")
+		}
+	}
+}
+
+func TestCompressIntSlice(t *testing.T) {
+	cases := []struct {
+		s    []int
+		c    int
+		want []byte
+	}{
+		{[]int{1, 1, 1, 1}, 3, []byte{36, 144}},
+	}
+	for _, c := range cases {
+		got := compressIntSlice(c.s, c.c)
+		if !byteSliceEqual(c.want, got) {
 			t.Errorf("Not equal")
 		}
 	}

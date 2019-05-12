@@ -15,6 +15,38 @@ type fastqRead struct {
 	qualities []int
 }
 
+func (read fastqRead) compressedSeq() []byte {
+	return compressIntSlice(read.seq, 3)
+}
+
+func (read fastqRead) compressedQual() []byte {
+	return compressIntSlice(read.qualities, 6)
+}
+
+func compressIntSlice(s []int, bitsPerItem int) []byte {
+	var boolSlice []bool
+	for _, item := range s {
+		slice, err := uint8ToBoolSlice(uint8(item), bitsPerItem)
+		if err != nil {
+			log.Fatalln("Could not compress seq")
+		}
+		boolSlice = append(boolSlice, slice...)
+	}
+	amountToPad := len(boolSlice) % 8
+	padding := make([]bool, amountToPad) // default value is false
+	boolSlice = append(boolSlice, padding...)
+	nBytes := len(boolSlice) / 8
+	compressed := make([]byte, nBytes)
+	for i := 0; i < nBytes; i++ {
+		start := i * 8
+		end := (i + 1) * 8
+		oneByteSlice := boolSlice[start:end]
+		oneByte, _ := boolSliceToByte(oneByteSlice)
+		compressed[i] = oneByte
+	}
+	return compressed
+}
+
 func reverseSliceB(s []bool) []bool {
 	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
 		s[i], s[j] = s[j], s[i]
