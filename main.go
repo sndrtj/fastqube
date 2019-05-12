@@ -23,6 +23,19 @@ func (read fastqRead) compressedQual() []byte {
 	return compressIntSlice(read.qualities, 6)
 }
 
+func (read fastqRead) byteID(capacity int) ([]byte, error) {
+	paddingLength := capacity - len(read.readID)
+	if paddingLength < 0 {
+		return nil, errors.New("Read ID is too large")
+	}
+	byteID := []byte(read.readID)
+	if paddingLength > 0 {
+		padding := make([]byte, paddingLength) // defaults = 0
+		byteID = append(byteID, padding...)
+	}
+	return byteID, nil
+}
+
 func compressIntSlice(s []int, bitsPerItem int) []byte {
 	var boolSlice []bool
 	for _, item := range s {
@@ -139,11 +152,17 @@ func fastqReadFromBucket(bucket []string) (fastqRead, error) {
 	return read, nil
 }
 
-func compressFastqBucket(bucket []string) {
-	_, err := fastqReadFromBucket(bucket)
+func compressFastqBucket(bucket []string) []byte {
+	read, err := fastqReadFromBucket(bucket)
 	if err != nil {
 		log.Fatalln(err)
 	}
+	var readAsBytes []byte
+	readID, _ := read.byteID(64)
+	readAsBytes = append(readAsBytes, readID...)
+	readAsBytes = append(readAsBytes, read.compressedSeq()...)
+	readAsBytes = append(readAsBytes, read.compressedQual()...)
+	return readAsBytes
 }
 
 func compressPath(path string) {

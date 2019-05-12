@@ -15,7 +15,7 @@ but those typically rely on aligning to a reference genome first (e.g CRAM).
 Instead, fastqube is a simple direct binary representation of a given fastq
 file. As such, each read consists of three fields:
 
-1. A read ID in ASCII.
+1. A read ID in UTF-8.
 2. The sequence encoded in 3-bit encoding (ACTGN, other IUPAC codes
 not supported)
 3. The quality string encoded in 6-bit encoding. Only sanger-encoded qualities
@@ -60,7 +60,7 @@ that supports variable length reads.
 3. Read IDs may not be longer than 512 bits (64 bytes). We may offer a feature
 in the future that supports settable read ID lengths.
 4. Only sanger-encoded quality strings are supported.
-5. Reads longer than 65536 bases are currently not supported 
+5. Reads longer than 65536 bases are currently not supported
 
 
 # How much smaller are fastqube files compared to fastq files
