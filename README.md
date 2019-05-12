@@ -1,8 +1,8 @@
 fastqube
 ========
 
-NOTE: THIS IS A DESIGN DOCUMENT. THIS REPOSITORY ONLY CONTAINS A LITTLE
-PROTOTYPE IN PYTHON.  
+NOTE: THIS IS A WORK IN PROGRESS. SEE SECTION "Currently implemented" FOR
+CURRENTLY IMPLEMENTED FUNCTIONALITIES.  
 
 Fastqube is little tool that makes a binary representation of fastq file(s).
 
