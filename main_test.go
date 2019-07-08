@@ -65,24 +65,12 @@ func TestSeqStringAsIntValid(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		got, err := seqStringToInts(c.s)
+		got, err := seqStringToInts(c.s, 3)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
 		if !intSliceEqual(got, c.want) {
 			t.Errorf("Wanted %q, got %q", c.want, got)
-		}
-	}
-}
-
-func TestSeqStringAsIntInvalid(t *testing.T) {
-	cases := []string{
-		"LALALA", "NONONONONO", "YES!",
-	}
-	for _, c := range cases {
-		_, err := seqStringToInts(c)
-		if err == nil {
-			t.Errorf("Sequence %q did not raise an error", c)
 		}
 	}
 }
@@ -93,7 +81,7 @@ func TestFastqReadFromBucket(t *testing.T) {
 	bucket[1] = "AAAAA"
 	bucket[2] = "FFFFF"
 
-	read, err := fastqReadFromBucket(bucket)
+	read, err := fastqReadFromBucket(bucket, 3)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

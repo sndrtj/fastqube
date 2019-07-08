@@ -19,8 +19,8 @@ type fastqRead struct {
 	qualities []int
 }
 
-func (read fastqRead) compressedSeq() []byte {
-	return compressIntSlice(read.seq, 3)
+func (read fastqRead) compressedSeq(bitsPerBase int) []byte {
+	return compressIntSlice(read.seq, bitsPerBase)
 }
 
 func (read fastqRead) compressedQual() []byte {
@@ -38,6 +38,48 @@ func (read fastqRead) byteID(capacity int) ([]byte, error) {
 		byteID = append(byteID, padding...)
 	}
 	return byteID, nil
+}
+
+// Uses three-bit encoding for a DNA base
+// returns 4 for everything that is not [ACTG]
+func threeBitDNA(base rune) int {
+	var result int
+
+	switch base {
+	case 'A':
+		result = 0
+	case 'T':
+		result = 1
+	case 'C':
+		result = 2
+	case 'G':
+		result = 3
+	default:
+		result = 4
+	}
+
+	return result
+}
+
+// Uses two-bit encoding for a DNA base
+// effectively squashes all non-[ACTG] bases to a G.
+func twoBitDNA(base rune) int {
+	var result int
+
+	switch base {
+	case 'A':
+		result = 0
+	case 'T':
+		result = 1
+	case 'C':
+		result = 2
+	case 'G':
+		result = 3
+	default:
+		result = 3
+	}
+
+	return result
 }
 
 func compressIntSlice(s []int, bitsPerItem int) []byte {
@@ -120,34 +162,33 @@ func decodeQualitryString(s string) []int {
 }
 
 // return DNA sequence as slice of ints.
-// errors when encountering an unknown base. Only A,C,T,G,N are allowed.
-func seqStringToInts(s string) ([]int, error) {
-	baseMap := map[string]int{
-		"A": 0,
-		"T": 1,
-		"C": 2,
-		"G": 3,
-		"N": 4}
+// errors when using unknown number of bits per base
+func seqStringToInts(s string, bitsPerBase int) ([]int, error) {
+	if bitsPerBase != 2 && bitsPerBase != 3 {
+		return nil, errors.New("Must use 2 or 3 bits per base")
+	}
 
 	result := make([]int, len(s))
 
 	for idx, runeValue := range s {
-		intValue, present := baseMap[string(runeValue)]
-		if !present {
-			return nil, errors.New("Unknown base " + string(runeValue))
+		var intValue int
+		if bitsPerBase == 2 {
+			intValue = twoBitDNA(runeValue)
+		} else if bitsPerBase == 3 {
+			intValue = threeBitDNA(runeValue)
 		}
 		result[idx] = intValue
 	}
 	return result, nil
 }
 
-func fastqReadFromBucket(bucket []string) (fastqRead, error) {
+func fastqReadFromBucket(bucket []string, bitsPerBase int) (fastqRead, error) {
 	var read fastqRead
 	if len(bucket) != 3 {
 		return read, errors.New("Read must consist of 3 strings")
 	}
 	readID := bucket[0]
-	seq, err := seqStringToInts(bucket[1])
+	seq, err := seqStringToInts(bucket[1], bitsPerBase)
 	if err != nil {
 		return read, err
 	}
@@ -156,15 +197,15 @@ func fastqReadFromBucket(bucket []string) (fastqRead, error) {
 	return read, nil
 }
 
-func compressFastqBucket(bucket []string) []byte {
-	read, err := fastqReadFromBucket(bucket)
+func compressFastqBucket(bucket []string, bitsPerBase int) []byte {
+	read, err := fastqReadFromBucket(bucket, bitsPerBase)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	var readAsBytes []byte
 	readID, _ := read.byteID(64)
 	readAsBytes = append(readAsBytes, readID...)
-	readAsBytes = append(readAsBytes, read.compressedSeq()...)
+	readAsBytes = append(readAsBytes, read.compressedSeq(bitsPerBase)...)
 	readAsBytes = append(readAsBytes, read.compressedQual()...)
 	return readAsBytes
 }
@@ -173,11 +214,11 @@ func utcTime() string {
 	loc, _ := time.LoadLocation("UTC")
 	return time.Now().In(loc).String()
 }
-func createHeader(capacity int) ([]byte, error) {
+func createHeader(capacity int, bitsPerBase int) ([]byte, error) {
 	var header string
 	programLines := fmt.Sprintf("Program: fastqube\nVersion: %s\n", programVersion)
 	modeLine := "Mode: LOSSLESS\n"
-	encodingLine := "Encoding:\n\tSequence: 3 bit\n\tQualities: 6 bit\n"
+	encodingLine := fmt.Sprintf("Encoding:\n\tSequence: %d bit\n\tQualities: 6 bit\n", bitsPerBase)
 	capacityLine := "Capacities:\n\tHeader: 4096 bytes\n\tRead IDs: 64 bytes\n"
 	dateLine := fmt.Sprintf("Date: %s\n", utcTime())
 	header = programLines + modeLine + encodingLine + capacityLine + dateLine
@@ -192,12 +233,12 @@ func createHeader(capacity int) ([]byte, error) {
 	return byteHeader, nil
 }
 
-func compressPath(path string) {
+func compressPath(path string, bitsPerBase int) {
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	header, _ := createHeader(4096)
+	header, _ := createHeader(4096, bitsPerBase)
 	binary.Write(os.Stdout, binary.BigEndian, header)
 	defer file.Close()
 
@@ -206,7 +247,7 @@ func compressPath(path string) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		if len(bucket) == 3 {
-			compressed := compressFastqBucket(bucket)
+			compressed := compressFastqBucket(bucket, bitsPerBase)
 			binary.Write(os.Stdout, binary.BigEndian, compressed)
 			bucket = make([]string, 0, 3)
 		}
@@ -221,18 +262,21 @@ func compressPath(path string) {
 
 	// process final bucket
 	if len(bucket) == 3 {
-		compressFastqBucket(bucket)
+		compressFastqBucket(bucket, bitsPerBase)
 	}
 }
 
 func main() {
 	var (
-		compress   bool
-		decompress bool
-		filePath   string
+		compress       bool
+		decompress     bool
+		filePath       string
+		twoBitEncoding bool
+		bitsPerBase    int
 	)
 	flag.BoolVar(&compress, "c", false, "Compress")
 	flag.BoolVar(&decompress, "d", false, "Decompress")
+	flag.BoolVar(&twoBitEncoding, "2", false, "2Bit-encoding")
 
 	flag.Parse()
 
@@ -253,7 +297,13 @@ func main() {
 		compress = true
 	}
 
+	if twoBitEncoding {
+		bitsPerBase = 2
+	} else {
+		bitsPerBase = 3
+	}
+
 	if compress {
-		compressPath(filePath)
+		compressPath(filePath, bitsPerBase)
 	}
 }
