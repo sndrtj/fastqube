@@ -48,7 +48,7 @@ func TestQualityDecoding(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		got := decodeQualitryString(c.s)
+		got := decodeQualitryString(c.s, false)
 		if !intSliceEqual(got, c.want) {
 			t.Errorf("Wanted %q, got %q", c.want, got)
 		}
@@ -81,7 +81,7 @@ func TestFastqReadFromBucket(t *testing.T) {
 	bucket[1] = "AAAAA"
 	bucket[2] = "FFFFF"
 
-	read, err := fastqReadFromBucket(bucket, 3)
+	read, err := fastqReadFromBucket(bucket, compressOptions{3, 6, 64})
 	if err != nil {
 		t.Errorf(err.Error())
 	}

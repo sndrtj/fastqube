@@ -28,30 +28,36 @@ metadata fields.
 # Lossy modes
 
 Apart from the lossless mode described above, fastqube also supports three
-different lossy modes
+different lossy modes through various settable parameters. These parameters
+can be combined.
 
-## No ID Mode
+## ID size
 
-In `No ID Mode` the read IDs are not stored. When serializing `No ID Mode`
-fastqube files back to fastq files, read IDs are generated as a simple
-integer, optionally with a pair tag. I.e. the n-th read will have an ID
-of `n`.
+Read IDs are fixed-with, but nevertheless are settable. When setting a read ID
+size of 0, read IDs are not emitted to the compressed stream at all.
+When serializing fastqube files back to fastq files, read IDs are generated as
+a simple integer, optionally with a pair tag. I.e. the n-th read will have an
+ID of `n`.
 
+## Block Quality encoding
 
-## Block Quality Mode.
+With block quality encoding enabled, quality scores are stored in 3-bit
+representation, with only five possible values: 0, 2, 26, 31 and 41. Any other
+scores will be rounded down to the nearest possible value.
 
-In `Block Quality Mode`, quality scores are stored in a 3-bit representation,
-with only five possible values: 0, 2, 26, 31 and 41. Any other scores
-will be rounded down to the nearest possible value.
+## 2-Bit Sequence encoding
 
-
-## Block Quality No ID Mode
-
-This mode combines both `No ID Mode` and `Block Quality Mode`.
+With 2-bit sequencing encoding enabled, the sequence is stored in a 2-bit
+representation. N, and all other IUPAC symbols, will be squashed to a G.
+G is also the base the Novaseq uses as its 'black' color, hence we hope that
+choosing this base as the fallback mimics the NovaSeq's behavior.
 
 
 # Currently implemented
-✔️ Compression in lossless mode  
+✔️ Compression in lossless mode
+✔️ Compression with 2-bit sequences
+✔️ Compression with block Qualities
+✔️ Compression with settable bytes per read ID
 
 
 # Limitations
@@ -71,13 +77,15 @@ in the future that supports settable read ID lengths.
 
 A typical fastq read with a 64-byte ID and 150 bases consists of 364 bytes.
 The direct lossless binary representation of such a read would consist of
-about 233 bytes.
+about 234 bytes.
 
 With the lossy modes the size is further trimmed to:
 
-1. About 169 bytes in `No ID Mode`.
-2. About 177 bytes in `Block Quality Mode`
-3. About 113 bytes in `Block Quality No ID Mode`
+1. About 170 bytes with read ID size of 0.
+2. About 178 bytes in `Block Quality Mode`
+3. About 114 bytes in `Block Quality Mode` _and_ a read ID size of 0.
+4. About 95 bytes in `Block Quality Mode` _and_ a read ID size of 0, _and_
+2-bit sequence encoding.
 
 
 # Usage
@@ -91,7 +99,7 @@ fastqube -c input.fastq > output.fqb
 
 ### Paired-end mode
 ```bash
-fastqube -c -1 R1.fastq -2 R2.fastq -o1 R1.fqb -o2 R2.fqb
+fastqube -c -R1 R1.fastq -R2 R2.fastq -o1 R1.fqb -o2 R2.fqb
 ```
 
 ## Lossless decompression
@@ -101,24 +109,34 @@ fastqube -d input.fqb > output.fastq
 
 ### Paired-end mode
 ```bash
-fastqube -d -1 R1.fqb -2 R2.fqb -o1 R1.fastq -o2 R2.fastq
+fastqube -d -R1 R1.fqb -R2 R2.fqb -o1 R1.fastq -o2 R2.fastq
 ```
 
 ## Lossy compression
-Lossly compression is enabled with the `-l` flag. This has three possible
-values:
+Lossly compression is enabled with several parameters:
 
-1. `NoID`
-2. `BlockQual`
-3. `BlockQualNoID`
+### Read ID size
 
 ```bash
-fastqube -l <MODE> -c input.fastq > output.fqb
+fastqube -B 0 -c input.fastq > output.fqb
 ```
 
-### Paired-end mode
+### 2-bit sequence encoding
+
 ```bash
-fastqube -c -1 R1.fastq -2 R2.fastq -o1 R1.fqb -o2 R2.fqb
+fastqube -2 -c input.fastq > output.fqb
+```
+
+### block quality encoding
+
+```bash
+fastqube -b -c input.fastq > output.fqb
+```
+
+### Combining all threeBitDNA
+
+```bash
+fastqube -b -B 0 -2 -c input.fastq > output.fqb
 ```
 
 ## Lossy decompression
