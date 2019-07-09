@@ -54,10 +54,11 @@ choosing this base as the fallback mimics the NovaSeq's behavior.
 
 
 # Currently implemented
-✔️ Compression in lossless mode
-✔️ Compression with 2-bit sequences
-✔️ Compression with block Qualities
-✔️ Compression with settable bytes per read ID
+
+* ✔️ Compression in lossless mode
+* ✔️ Compression with 2-bit sequences
+* ✔️ Compression with block Qualities
+* ✔️ Compression with settable bytes per read ID
 
 
 # Limitations
