@@ -95,13 +95,13 @@ func blockQual(qual int) int {
 	case qual < 2:
 		result = 0
 	case qual < 26:
-		result = 2
+		result = 1 // decodes to 2
 	case qual < 31:
-		result = 26
+		result = 2 // decodes to 26
 	case qual < 41:
-		result = 31
+		result = 3 // decodes to 31
 	case qual >= 41:
-		result = 41
+		result = 4 // decodes to 41
 	}
 
 	return result
@@ -302,7 +302,8 @@ func compressPath(path string, opts compressOptions) {
 
 	// process final bucket
 	if len(bucket) == 3 {
-		compressFastqBucket(bucket, opts)
+		compressed := compressFastqBucket(bucket, opts)
+		binary.Write(os.Stdout, binary.BigEndian, compressed)
 	}
 }
 
