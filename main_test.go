@@ -156,3 +156,89 @@ func TestCompressIntSlice(t *testing.T) {
 		}
 	}
 }
+
+func TestTwoBitDna(t *testing.T) {
+	got := twoBitDNA('N')
+	if got != 3 {
+		t.Errorf("Not equal")
+	}
+}
+
+func TestBlockQual(t *testing.T) {
+	cases := []struct {
+		q    int
+		want int
+	}{
+		{1, 0},
+		{20, 1},
+		{30, 2},
+		{40, 3},
+		{500, 4},
+	}
+
+	for _, c := range cases {
+		got := blockQual(c.q)
+		if got != c.want {
+			t.Errorf("Not equal")
+		}
+	}
+}
+
+func TestCompressedSeq(t *testing.T) {
+	cases := []struct {
+		seq         []int
+		quals       []int
+		bitsPerBase int
+		want        []byte
+	}{
+		{[]int{0, 1, 2, 3}, []int{0, 0, 0, 0}, 3, []byte{5, 48}}, // this is ACTG
+		{[]int{0, 1, 2, 3}, []int{0, 0, 0, 0}, 2, []byte{27}},    // this is also ACTG
+	}
+
+	for _, c := range cases {
+		read := fastqRead{"la", c.seq, c.quals}
+		got := read.compressedSeq(c.bitsPerBase)
+		if !byteSliceEqual(c.want, got) {
+			t.Errorf("Not equals")
+		}
+	}
+}
+
+func TestCompressedQual(t *testing.T) {
+	cases := []struct {
+		seq         []int
+		quals       []int
+		bitsPerBase int
+		want        []byte
+	}{
+		{[]int{0, 1, 2, 3}, []int{10, 20, 30, 40}, 6, []byte{41, 71, 168}}, // this is ACTG
+		{[]int{0, 1, 2, 3}, []int{0, 1, 2, 3}, 3, []byte{5, 48}},           // this is also ACTG
+	}
+
+	for _, c := range cases {
+		read := fastqRead{"la", c.seq, c.quals}
+		got := read.compressedQual(c.bitsPerBase)
+		if !byteSliceEqual(c.want, got) {
+			t.Errorf("Not equals")
+		}
+	}
+}
+
+func TestCompressedID(t *testing.T) {
+	cases := []struct {
+		readID   string
+		capacity int
+		want     []byte
+	}{
+		{"la", 2, []byte{108, 97}},
+		{"la", 3, []byte{108, 97, 0}},
+	}
+
+	for _, c := range cases {
+		read := fastqRead{c.readID, []int{1, 1, 1, 1}, []int{1, 1, 1, 1}}
+		got, _ := read.byteID(c.capacity)
+		if !byteSliceEqual(c.want, got) {
+			t.Errorf("Not equals")
+		}
+	}
+}
